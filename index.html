@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Høgruta i Jotunheimen – Julie mars 2026</title>
+  <style>
+    :root {
+      --yr-blue: #006ebd;
+      --yr-blue-light: #e8f3fb;
+      --yr-green: #007a5e;
+      --yr-orange: #c85000;
+      --border: #dde3ea;
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --muted: #5a6272;
+      --rain: #a0c8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      padding-bottom: 3rem;
+    }
+
+    /* HEADER */
+    .site-header {
+      background: var(--yr-blue);
+      color: white;
+      padding: 1.5rem 1.5rem 1rem;
+    }
+    .site-header h1 { font-size: 1.5rem; font-weight: 800; }
+    .site-header .sub { opacity: 0.85; font-size: 0.85rem; margin-top: 0.2rem; }
+    .header-stats {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    .hstat { color: white; }
+    .hstat .v { font-size: 1.1rem; font-weight: 700; }
+    .hstat .l { font-size: 0.72rem; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    .updated-bar {
+      background: #e8f3fb;
+      color: var(--muted);
+      font-size: 0.76rem;
+      padding: 0.4rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .updated-bar span { color: var(--yr-blue); font-weight: 600; }
+
+    /* MAIN */
+    .main { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+    /* DAY SECTION */
+    .day-section { margin-bottom: 2rem; }
+    .day-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .day-pill {
+      background: var(--yr-blue);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+    }
+    .day-title h2 { font-size: 1.05rem; font-weight: 700; }
+    .day-title .dist { margin-left: auto; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+
+    /* ROUTE */
+    .route-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-bottom: 1rem;
+      padding: 0.6rem 0.75rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .rnode {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+    }
+    .rnode.hut { background: #fff7e0; color: #8a6000; border: 1px solid #e0c860; }
+    .rnode.peak { background: var(--yr-blue-light); color: var(--yr-blue); border: 1px solid #b8d8f0; }
+    .rarrow { color: #aab; font-size: 0.85rem; }
+    .relev { font-size: 0.7rem; font-weight: 400; color: var(--muted); }
+
+    /* LOCATION CARD */
+    .loc-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+    }
+    .loc-header {
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+      padding: 0.55rem 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .loc-header .loc-name { font-weight: 700; font-size: 0.88rem; }
+    .loc-header .loc-alt { font-size: 0.75rem; color: var(--muted); margin-left: auto; }
+
+    /* WEATHER TABLE */
+    .wx-table { width: 100%; border-collapse: collapse; }
+    .wx-table th {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-align: left;
+      padding: 0.35rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      background: #fafbfc;
+      white-space: nowrap;
+    }
+    .wx-table td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid #eef0f3;
+      font-size: 0.85rem;
+      vertical-align: middle;
+    }
+    .wx-table tr:last-child td { border-bottom: none; }
+    .wx-table tr:hover td { background: #f8fafc; }
+
+    .td-time { font-weight: 700; color: var(--muted); width: 55px; }
+    .td-sym { width: 36px; font-size: 1.3rem; line-height: 1; }
+    .td-desc { color: var(--muted); font-size: 0.8rem; }
+    .td-temp { font-weight: 700; font-size: 0.95rem; width: 60px; }
+    .td-temp.cold { color: #1060c0; }
+    .td-temp.vcold { color: #0030a0; }
+    .td-temp.mild { color: #c05000; }
+
+    .td-wind { width: 120px; }
+    .wind-val { font-weight: 600; }
+    .wind-lbl { font-size: 0.72rem; color: var(--muted); }
+    .wind-warn { color: var(--yr-orange); }
+    .wind-strong { color: #900; }
+
+    .td-precip { width: 90px; }
+    .precip-bar-wrap { display: flex; align-items: center; gap: 0.4rem; }
+    .precip-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--rain);
+      min-width: 2px;
+    }
+    .precip-val { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+
+    .td-feels { font-size: 0.78rem; color: var(--muted); width: 90px; }
+    .feels-cold { color: #1060c0; font-weight: 600; }
+    .feels-vcold { color: #0030a0; font-weight: 700; }
+
+    /* Alert strip */
+    .alert-strip {
+      margin-bottom: 0.75rem;
+      padding: 0.6rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      line-height: 1.5;
+    }
+    .alert-strip.warn { background: #fff3e0; border: 1px solid #f0c060; color: #804000; }
+    .alert-strip.good { background: #e8f5ef; border: 1px solid #80c8a0; color: #205040; }
+    .alert-strip a { color: var(--yr-blue); }
+
+    /* Travel day */
+    .travel-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .travel-card strong { color: var(--text); }
+
+    .source-note {
+      text-align: center;
+      padding-top: 1.5rem;
+      font-size: 0.73rem;
+      color: var(--muted);
+    }
+    .source-note a { color: var(--yr-blue); text-decoration: none; }
+
+    .spinner {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border: 2px solid #ccc;
+      border-top-color: var(--yr-blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 500px) {
+      .td-feels, .td-desc { display: none; }
+      .day-title .dist { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="site-header">
+  <h1>⛰️ Høgruta i Jotunheimen</h1>
+  <div class="sub">Julie · Mars 2026 · Etappe 1–4 · Gjendesheim til Spiterstulen</div>
+  <div class="header-stats">
+    <div class="hstat"><div class="v">27–31. mars</div><div class="l">Datoer</div></div>
+    <div class="hstat"><div class="v">~64 km</div><div class="l">Distanse</div></div>
+    <div class="hstat"><div class="v">~4 700 hm</div><div class="l">Stigning</div></div>
+    <div class="hstat"><div class="v">2 469 moh</div><div class="l">Høyeste punkt</div></div>
+  </div>
+</div>
+
+<div class="updated-bar" id="updated-bar">
+  Henter vær fra yr.no… <span class="spinner"></span>
+</div>
+
+<div class="main">
+
+  <!-- DAG 0 -->
+  <div class="day-section">
+    <div class="day-title">
+      <div class="day-pill">Fre 27. mars</div>
+      <h2>Reisedag — Gjendesheim</h2>
+    </div>
+    <div class="travel-card">
+      🚗 Ankomst <strong>Gjendesheim</strong> (995 moh). 185 sengeplasser, lokal mat. Åpent t.o.m. 3. mai 2026.
+    </div>
+  </div>
+
+  <!-- DAG 1 -->
+  <div class="day-section">
+    <div class="day-title">
+      <div class="day-pill">Lør 28. mars — Dag 1</div>
+      <h2>Gjendesheim → Memurubu</h2>
+      <div class="dist">16 km · 1 258 hm</div>
+    </div>
+    <div class="route-row">
+      <span class="rnode hut">🏠 Gjendesheim <span class="relev">995 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode peak">Bukkehø <span class="relev">~1 950 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode peak">⭐ Besshø <span class="relev">2 258 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode hut">🏠 Memurubu <span class="relev">1 008 moh</span></span>
+    </div>
+    <div id="alert-day1"></div>
+    <div id="wx-day1"><div class="loc-card"><div class="loc-header"><span class="loc-name">Henter vær…</span></div></div></div>
+  </div>
+
+  <!-- DAG 2 -->
+  <div class="day-section">
+    <div class="day-title">
+      <div class="day-pill">Søn 29. mars — Dag 2</div>
+      <h2>Memurubu → Glitterheim</h2>
+      <div class="dist">18 km · 1 400 hm</div>
+    </div>
+    <div class="route-row">
+      <span class="rnode hut">🏠 Memurubu <span class="relev">1 008 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode peak">⭐ Surtningssue <span class="relev">2 368 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode peak">Søre Veotinden <span class="relev">~2 000 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode peak">Styggehøe (opt.) <span class="relev">1 883 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode hut">🏠 Glitterheim <span class="relev">1 400 moh</span></span>
+    </div>
+    <div id="alert-day2"></div>
+    <div id="wx-day2"><div class="loc-card"><div class="loc-header"><span class="loc-name">Henter vær…</span></div></div></div>
+  </div>
+
+  <!-- DAG 3 -->
+  <div class="day-section">
+    <div class="day-title">
+      <div class="day-pill">Man 30. mars — Dag 3</div>
+      <h2>Glitterheim → Spiterstulen</h2>
+      <div class="dist">14 km · 1 100 hm</div>
+    </div>
+    <div class="route-row">
+      <span class="rnode hut">🏠 Glitterheim <span class="relev">1 400 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode peak">⭐ Glittertind <span class="relev">2 465 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode peak">Skautkampen <span class="relev">~1 800 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode hut">🏠 Spiterstulen <span class="relev">1 100 moh</span></span>
+    </div>
+    <div id="alert-day3"></div>
+    <div id="wx-day3"><div class="loc-card"><div class="loc-header"><span class="loc-name">Henter vær…</span></div></div></div>
+  </div>
+
+  <!-- DAG 4 -->
+  <div class="day-section">
+    <div class="day-title">
+      <div class="day-pill">Tir 31. mars — Dag 4</div>
+      <h2>Galdhøpiggen tur-retur</h2>
+      <div class="dist">~16 km · ~1 400 hm</div>
+    </div>
+    <div class="route-row">
+      <span class="rnode hut">🏠 Spiterstulen <span class="relev">1 100 moh</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode peak">⭐ Galdhøpiggen <span class="relev">2 469 moh — Norges høyeste</span></span>
+      <span class="rarrow">→</span>
+      <span class="rnode hut">🏠 Spiterstulen <span class="relev">1 100 moh</span></span>
+    </div>
+    <div id="alert-day4"></div>
+    <div id="wx-day4"><div class="loc-card"><div class="loc-header"><span class="loc-name">Henter vær…</span></div></div></div>
+  </div>
+
+  <div class="source-note">
+    Værdata: <a href="https://www.yr.no" target="_blank">yr.no</a> via met.no Locationforecast 2.0 ·
+    Skredvarsel: <a href="https://www.varsom.no/snoskredvarsling/varsomkart/#lat=61.55&lng=8.35&zoom=9" target="_blank">varsom.no</a> ·
+    Rute: <a href="https://høgrutajotunheimen.no" target="_blank">høgrutajotunheimen.no</a>
+  </div>
+</div>
+
+<script>
+const LOCS = {
+  gjendesheim:   { lat: 61.4923, lon: 8.5318, alt: 995 },
+  bessho:        { lat: 61.484,  lon: 8.434,  alt: 2258 },
+  memurubu:      { lat: 61.4766, lon: 8.3376, alt: 1008 },
+  surtningssue:  { lat: 61.505,  lon: 8.295,  alt: 2368 },
+  glitterheim:   { lat: 61.5986, lon: 8.3668, alt: 1400 },
+  glittertind:   { lat: 61.651,  lon: 8.404,  alt: 2465 },
+  spiterstulen:  { lat: 61.6326, lon: 8.4009, alt: 1100 },
+  galdhopiggen:  { lat: 61.636,  lon: 8.312,  alt: 2469 },
+};
+
+const cache = {};
+
+async function fetchForecast(key) {
+  if (cache[key]) return cache[key];
+  const { lat, lon, alt } = LOCS[key];
+  const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}&altitude=${alt}`;
+  const res = await fetch(url, { headers: { 'User-Agent': 'HogruteJulie/1.0' } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  cache[key] = json.properties.timeseries;
+  return cache[key];
+}
+
+function getSlots(ts, dateStr, hours) {
+  const results = [];
+  for (const h of hours) {
+    const target = `${dateStr}T${String(h).padStart(2,'0')}:00:00Z`;
+    const slot = ts.find(t => t.time === target);
+    if (slot) results.push({ hour: h, slot });
+  }
+  return results;
+}
+
+function windLabel(ms) {
+  if (ms < 1.5)  return { lbl: 'Stille', warn: false };
+  if (ms < 3.4)  return { lbl: 'Svak vind', warn: false };
+  if (ms < 5.5)  return { lbl: 'Lett bris', warn: false };
+  if (ms < 8.0)  return { lbl: 'Laber bris', warn: false };
+  if (ms < 10.8) return { lbl: 'Frisk bris', warn: false };
+  if (ms < 13.9) return { lbl: 'Liten kuling', warn: true };
+  if (ms < 17.2) return { lbl: 'Stiv kuling', warn: true };
+  return { lbl: 'Sterk kuling+', warn: true };
+}
+
+function symbolToEmoji(code) {
+  if (!code) return '—';
+  if (code.includes('clearsky'))      return '☀️';
+  if (code.includes('fair'))          return '🌤️';
+  if (code.includes('partlycloudy'))  return '⛅';
+  if (code.includes('cloudy'))        return '☁️';
+  if (code.includes('heavysnow'))     return '❄️';
+  if (code.includes('lightsnow'))     return '🌨️';
+  if (code.includes('snowshowers'))   return '🌨️';
+  if (code.includes('snow'))          return '🌨️';
+  if (code.includes('sleet'))         return '🌧️';
+  if (code.includes('rain'))          return '🌧️';
+  if (code.includes('fog'))           return '🌫️';
+  return '☁️';
+}
+
+function symbolLabel(code) {
+  if (!code) return '–';
+  if (code.includes('clearsky'))     return 'Klarvær';
+  if (code.includes('fair'))         return 'Lettskyet';
+  if (code.includes('partlycloudy')) return 'Delvis skyet';
+  if (code.includes('cloudy'))       return 'Overskyet';
+  if (code.includes('heavysnow'))    return 'Kraftig snø';
+  if (code.includes('lightsnow'))    return 'Lett snø';
+  if (code.includes('snowshowers'))  return 'Snøbyger';
+  if (code.includes('snow'))         return 'Snø';
+  if (code.includes('lightsleet'))   return 'Lett sludd';
+  if (code.includes('sleet'))        return 'Sludd';
+  if (code.includes('lightrain'))    return 'Lett regn';
+  if (code.includes('rain'))         return 'Regn';
+  if (code.includes('fog'))          return 'Tåke';
+  return code;
+}
+
+function windChill(temp, wind_ms) {
+  if (temp >= 10 || wind_ms < 4.8) return null;
+  const kmh = wind_ms * 3.6;
+  return 13.12 + 0.6215 * temp - 11.37 * Math.pow(kmh, 0.16) + 0.3965 * temp * Math.pow(kmh, 0.16);
+}
+
+function tempClass(t) {
+  if (t <= -15) return 'vcold';
+  if (t <= -5)  return 'cold';
+  if (t >= 5)   return 'mild';
+  return '';
+}
+
+function formatHour(utcHour, date) {
+  // Convert UTC to local time (CET=+1, CEST=+2 after Mar 29 02:00)
+  const d = new Date(date + 'T' + String(utcHour).padStart(2,'0') + ':00:00Z');
+  return d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Oslo' });
+}
+
+function buildLocCard(locName, locAlt, dateStr, slots) {
+  let rows = '';
+  let maxWind = 0, maxPrecip = 0, minTemp = 99;
+
+  for (const { hour, slot } of slots) {
+    const d = slot.data.instant.details;
+    const next6 = slot.data.next_6_hours;
+    const next1 = slot.data.next_1_hours;
+    const symbol = next6?.summary?.symbol_code || next1?.summary?.symbol_code || '';
+    const precip = next6?.details?.precipitation_amount ?? next1?.details?.precipitation_amount ?? 0;
+    const t = d.air_temperature;
+    const ws = d.wind_speed;
+    const wc = windChill(t, ws);
+    const wl = windLabel(ws);
+    const precipMax = 15; // bar scale max mm
+    const barW = Math.min(100, (precip / precipMax) * 100);
+
+    if (ws > maxWind) maxWind = ws;
+    if (precip > maxPrecip) maxPrecip = precip;
+    if (t < minTemp) minTemp = t;
+
+    const warnClass = wl.warn ? (ws >= 13.9 ? 'wind-strong' : 'wind-warn') : '';
+    const tcls = tempClass(t);
+    const feelsHtml = wc !== null
+      ? `<td class="td-feels">Føles <span class="${wc <= -20 ? 'feels-vcold' : 'feels-cold'}">${wc.toFixed(0)}°</span></td>`
+      : `<td class="td-feels"></td>`;
+
+    rows += `
+      <tr>
+        <td class="td-time">${formatHour(hour, dateStr)}</td>
+        <td class="td-sym">${symbolToEmoji(symbol)}</td>
+        <td class="td-desc">${symbolLabel(symbol)}</td>
+        <td class="td-temp ${tcls}">${t >= 0 ? '+' : ''}${t.toFixed(0)}°C</td>
+        <td class="td-wind">
+          <span class="wind-val ${warnClass}">${ws.toFixed(1)} m/s</span><br/>
+          <span class="wind-lbl ${warnClass}">${wl.lbl}</span>
+        </td>
+        <td class="td-precip">
+          <div class="precip-bar-wrap">
+            <div class="precip-bar" style="width:${barW}%"></div>
+            <span class="precip-val">${precip > 0 ? precip.toFixed(1) + ' mm' : '–'}</span>
+          </div>
+        </td>
+        ${feelsHtml}
+      </tr>`;
+  }
+
+  if (slots.length === 0) {
+    rows = `<tr><td colspan="7" style="padding:0.8rem;color:#aaa;font-style:italic;">Ingen data tilgjengelig ennå for denne datoen.</td></tr>`;
+  }
+
+  return { html: `
+    <div class="loc-card">
+      <div class="loc-header">
+        <span class="loc-name">📍 ${locName}</span>
+        <span class="loc-alt">${locAlt} moh</span>
+      </div>
+      <table class="wx-table">
+        <thead>
+          <tr>
+            <th>Tid</th>
+            <th></th>
+            <th>Vær</th>
+            <th>Temp</th>
+            <th>Vind</th>
+            <th>Nedbør</th>
+            <th>Føles som</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`, maxWind, maxPrecip, minTemp };
+}
+
+function buildAlerts(maxWind, maxPrecip, minTemp) {
+  const parts = [];
+  if (maxWind >= 13.9) parts.push(`⚠️ Stiv kuling (${maxWind.toFixed(1)} m/s) — krevende forhold, vurder ruta nøye.`);
+  else if (maxWind >= 10.8) parts.push(`⚠️ Liten kuling (${maxWind.toFixed(1)} m/s) — vær obs på utsatte parti.`);
+  if (maxPrecip >= 3) parts.push(`🌨️ Kraftig snøfall — dårlig sikt mulig. Sjekk <a href="https://www.varsom.no" target="_blank">varsom.no</a>.`);
+  else if (maxPrecip >= 1) parts.push(`🌨️ Noe snøfall — sjekk skredvarsling på <a href="https://www.varsom.no" target="_blank">varsom.no</a>.`);
+  if (minTemp <= -20) parts.push(`🧊 Ekstremt kaldt (${minTemp.toFixed(0)}°C med vind) — ekstra isolasjon og balaklava.`);
+
+  if (parts.length === 0) {
+    return `<div class="alert-strip good">✅ Forholdene ser greie ut. Oppdater siden igjen nærmere turen for fersk melding.</div>`;
+  }
+  return parts.map(p => `<div class="alert-strip warn">${p}</div>`).join('');
+}
+
+const HOURS = [0, 6, 9, 12, 15, 18];
+
+async function loadDay(wxId, alertId, date, locations) {
+  try {
+    const keys = [...new Set(locations.map(l => l.key))];
+    await Promise.all(keys.map(k => fetchForecast(k)));
+
+    let html = '';
+    let maxWind = 0, maxPrecip = 0, minTemp = 99;
+
+    for (const loc of locations) {
+      const ts = cache[loc.key];
+      const slots = getSlots(ts, date, HOURS);
+      const card = buildLocCard(loc.name, loc.alt, date, slots);
+      html += card.html;
+      if (card.maxWind > maxWind) maxWind = card.maxWind;
+      if (card.maxPrecip > maxPrecip) maxPrecip = card.maxPrecip;
+      if (card.minTemp < minTemp) minTemp = card.minTemp;
+    }
+
+    document.getElementById(wxId).innerHTML = html;
+    document.getElementById(alertId).innerHTML = buildAlerts(maxWind, maxPrecip, minTemp);
+  } catch (e) {
+    document.getElementById(wxId).innerHTML = `<div class="loc-card" style="padding:1rem;color:#c00">Feil ved henting av værmeldingen: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+async function main() {
+  await Promise.all([
+    loadDay('wx-day1', 'alert-day1', '2026-03-28', [
+      { key: 'gjendesheim',  name: 'Gjendesheim',         alt: 995  },
+      { key: 'bessho',       name: '⭐ Besshø (topp)',     alt: 2258 },
+      { key: 'memurubu',     name: 'Memurubu',            alt: 1008 },
+    ]),
+    loadDay('wx-day2', 'alert-day2', '2026-03-29', [
+      { key: 'memurubu',     name: 'Memurubu',                alt: 1008 },
+      { key: 'surtningssue', name: '⭐ Surtningssue (topp)',  alt: 2368 },
+      { key: 'glitterheim',  name: 'Glitterheim',             alt: 1400 },
+    ]),
+    loadDay('wx-day3', 'alert-day3', '2026-03-30', [
+      { key: 'glitterheim',  name: 'Glitterheim',             alt: 1400 },
+      { key: 'glittertind',  name: '⭐ Glittertind (topp)',   alt: 2465 },
+      { key: 'spiterstulen', name: 'Spiterstulen',            alt: 1100 },
+    ]),
+    loadDay('wx-day4', 'alert-day4', '2026-03-31', [
+      { key: 'spiterstulen', name: 'Spiterstulen',            alt: 1100 },
+      { key: 'galdhopiggen', name: '⭐ Galdhøpiggen (topp)',  alt: 2469 },
+    ]),
+  ]);
+
+  const now = new Date();
+  const fmt = now.toLocaleString('no-NO', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+  document.getElementById('updated-bar').innerHTML = `Vær hentet fra yr.no/met.no · <span>Oppdatert ${fmt}</span>`;
+}
+
+main();
+</script>
+</body>
+</html>
