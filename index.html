@@ -356,7 +356,7 @@ async function fetchForecast(key) {
   if (cache[key]) return cache[key];
   const { lat, lon, alt } = LOCS[key];
   const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}&altitude=${alt}`;
-  const res = await fetch(url, { headers: { 'User-Agent': 'HogruteJulie/1.0' } });
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   cache[key] = json.properties.timeseries;
