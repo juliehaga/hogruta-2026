@@ -167,26 +167,19 @@
     .feels-vcold { color: #0030a0; font-weight: 700; }
 
     /* MOBILE */
+    .wx-scroll-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     @media (max-width: 600px) {
-      .wx-header-row { display: none; }
+      .wx-header-row,
       .wx-row {
-        display: flex;
-        flex-wrap: nowrap;
-        align-items: center;
-        gap: 0;
-        padding: 0.55rem 0.75rem;
+        grid-template-columns: 48px 28px 90px 52px 110px 70px 80px;
+        min-width: 480px;
+        font-size: 0.8rem;
       }
-      .wx-time   { min-width: 42px; font-size: 0.82rem; flex-shrink: 0; }
-      .wx-sym    { min-width: 28px; font-size: 1.2rem; flex-shrink: 0; }
-      .wx-temp   { min-width: 46px; font-size: 0.92rem; font-weight: 700; flex-shrink: 0; }
-      .wx-wind   { flex: 1; min-width: 0; }
-      .wind-val  { font-size: 0.82rem; }
-      .wind-lbl  { font-size: 0.7rem; }
-      .wx-precip { min-width: 48px; text-align: right; flex-shrink: 0; }
-      .precip-bar { display: none; }
-      .precip-val { font-size: 0.8rem; }
-      .wx-desc   { display: none; }
-      .wx-feels  { display: none; }
+      .wind-lbl { font-size: 0.68rem; }
+      .wx-sym { font-size: 1.1rem; }
     }
 
     /* Alert strip */
@@ -512,10 +505,12 @@ function buildLocCard(locName, locAlt, dateStr, slots) {
         <span class="loc-name">📍 ${locName}</span>
         <span class="loc-alt">${locAlt} moh</span>
       </div>
-      <div class="wx-header-row">
-        <div>Tid</div><div></div><div>Vær</div><div>Temp</div><div>Vind</div><div>Nedbør</div><div>Føles som</div>
+      <div class="wx-scroll-wrap">
+        <div class="wx-header-row">
+          <div>Tid</div><div></div><div>Vær</div><div>Temp</div><div>Vind</div><div>Nedbør</div><div>Føles som</div>
+        </div>
+        ${rows}
       </div>
-      ${rows}
     </div>`, maxWind, maxPrecip, minTemp };
 }
 
