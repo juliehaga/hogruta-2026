@@ -353,35 +353,52 @@
 </div>
 
 <script>
-// yr.no location IDs
+// met.no locations (complete endpoint includes wind gust)
 const LOCS = {
-  gjendesheim:   { yrId: '1-153543', alt: 995  },
-  bessho:        { yrId: '1-162939', alt: 2258 },
-  memurubu:      { yrId: '1-153550', alt: 1008 },
-  surtningssue:  { yrId: '1-162923', alt: 2368 },
-  glitterheim:   { yrId: '1-162866', alt: 1400 },
-  glittertind:   { yrId: '1-162841', alt: 2465 },
-  spiterstulen:  { yrId: '1-162598', alt: 1100 },
-  galdhopiggen:  { yrId: '1-162579', alt: 2469 },
+  gjendesheim:   { lat: 61.4923, lon: 8.5318, alt: 995  },
+  bessho:        { lat: 61.484,  lon: 8.434,  alt: 2258 },
+  memurubu:      { lat: 61.4766, lon: 8.3376, alt: 1008 },
+  surtningssue:  { lat: 61.505,  lon: 8.295,  alt: 2368 },
+  glitterheim:   { lat: 61.5986, lon: 8.3668, alt: 1400 },
+  glittertind:   { lat: 61.651,  lon: 8.404,  alt: 2465 },
+  spiterstulen:  { lat: 61.6326, lon: 8.4009, alt: 1100 },
+  galdhopiggen:  { lat: 61.636,  lon: 8.312,  alt: 2469 },
 };
 
 const cache = {};
 
 async function fetchForecast(key) {
   if (cache[key]) return cache[key];
-  const { yrId } = LOCS[key];
-  const url = `https://www.yr.no/api/v0/locations/${yrId}/forecast`;
-  const res = await fetch(url, { headers: { 'User-Agent': 'HogruteJulie/1.0' } });
+  const { lat, lon, alt } = LOCS[key];
+  const url = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${lat}&lon=${lon}&altitude=${alt}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
-  // shortIntervals = hourly, local time already
-  cache[key] = json.shortIntervals || [];
+  cache[key] = json.properties.timeseries;
   return cache[key];
 }
 
-function getSlotsYr(intervals, dateStr) {
-  // dateStr = 'YYYY-MM-DD', intervals have start like '2026-03-28T07:00:00+01:00'
-  return intervals.filter(iv => iv.start.startsWith(dateStr));
+// Convert met.no timeseries to yr-like intervals for a given date
+function getSlotsYr(timeseries, dateStr) {
+  return timeseries
+    .filter(ts => ts.time.startsWith(dateStr))
+    .map(ts => {
+      const d = ts.data.instant.details;
+      const next1 = ts.data.next_1_hours;
+      const next6 = ts.data.next_6_hours;
+      const symbol = next1?.summary?.symbol_code || next6?.summary?.symbol_code || '';
+      const precip = next1?.details?.precipitation_amount ?? next6?.details?.precipitation_amount ?? 0;
+      // Convert UTC time to local
+      const localTime = new Date(ts.time).toLocaleString('sv-SE', { timeZone: 'Europe/Oslo', hour: '2-digit', minute: '2-digit' }).substring(11, 16);
+      return {
+        start: ts.time.substring(0, 10) + 'T' + localTime + ':00',
+        temperature: { value: d.air_temperature },
+        wind: { speed: d.wind_speed, gust: d.wind_speed_of_gust ?? null },
+        feelsLike: null, // calculated below
+        precipitation: { value: precip },
+        symbolCode: { next1Hour: symbol },
+      };
+    });
 }
 
 function windLabel(ms) {
@@ -474,8 +491,15 @@ function buildLocCard(locName, locAlt, dateStr, intervals) {
         })()
       : `<div class="wx-gust"><span class="wind-lbl">–</span></div>`;
 
-    const feelsHtml = feels !== null
-      ? `<div class="wx-feels">Føles <span class="${feels <= -20 ? 'feels-vcold' : feels <= -10 ? 'feels-cold' : ''}">${feels}°</span></div>`
+    // Calculate wind chill if yr doesn't provide feelsLike
+    let feelsVal = feels;
+    if (feelsVal === null && t < 10 && ws > 4.8) {
+      const kmh = ws * 3.6;
+      feelsVal = Math.round(13.12 + 0.6215*t - 11.37*Math.pow(kmh,0.16) + 0.3965*t*Math.pow(kmh,0.16));
+    }
+    if (feelsVal !== null && feelsVal < minFeels) minFeels = feelsVal;
+    const feelsHtml = feelsVal !== null
+      ? `<div class="wx-feels">Føles <span class="${feelsVal <= -20 ? 'feels-vcold' : feelsVal <= -10 ? 'feels-cold' : ''}">${feelsVal}°</span></div>`
       : `<div class="wx-feels"></div>`;
 
     rows += `
