@@ -353,38 +353,35 @@
 </div>
 
 <script>
+// yr.no location IDs
 const LOCS = {
-  gjendesheim:   { lat: 61.4923, lon: 8.5318, alt: 995 },
-  bessho:        { lat: 61.484,  lon: 8.434,  alt: 2258 },
-  memurubu:      { lat: 61.4766, lon: 8.3376, alt: 1008 },
-  surtningssue:  { lat: 61.505,  lon: 8.295,  alt: 2368 },
-  glitterheim:   { lat: 61.5986, lon: 8.3668, alt: 1400 },
-  glittertind:   { lat: 61.651,  lon: 8.404,  alt: 2465 },
-  spiterstulen:  { lat: 61.6326, lon: 8.4009, alt: 1100 },
-  galdhopiggen:  { lat: 61.636,  lon: 8.312,  alt: 2469 },
+  gjendesheim:   { yrId: '1-153543', alt: 995  },
+  bessho:        { yrId: '1-162939', alt: 2258 },
+  memurubu:      { yrId: '1-153550', alt: 1008 },
+  surtningssue:  { yrId: '1-162923', alt: 2368 },
+  glitterheim:   { yrId: '1-162866', alt: 1400 },
+  glittertind:   { yrId: '1-162841', alt: 2465 },
+  spiterstulen:  { yrId: '1-162598', alt: 1100 },
+  galdhopiggen:  { yrId: '1-162579', alt: 2469 },
 };
 
 const cache = {};
 
 async function fetchForecast(key) {
   if (cache[key]) return cache[key];
-  const { lat, lon, alt } = LOCS[key];
-  const url = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${lat}&lon=${lon}&altitude=${alt}`;
-  const res = await fetch(url);
+  const { yrId } = LOCS[key];
+  const url = `https://www.yr.no/api/v0/locations/${yrId}/forecast`;
+  const res = await fetch(url, { headers: { 'User-Agent': 'HogruteJulie/1.0' } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
-  cache[key] = json.properties.timeseries;
+  // shortIntervals = hourly, local time already
+  cache[key] = json.shortIntervals || [];
   return cache[key];
 }
 
-function getSlots(ts, dateStr, hours) {
-  const results = [];
-  for (const h of hours) {
-    const target = `${dateStr}T${String(h).padStart(2,'0')}:00:00Z`;
-    const slot = ts.find(t => t.time === target);
-    if (slot) results.push({ hour: h, slot });
-  }
-  return results;
+function getSlotsYr(intervals, dateStr) {
+  // dateStr = 'YYYY-MM-DD', intervals have start like '2026-03-28T07:00:00+01:00'
+  return intervals.filter(iv => iv.start.startsWith(dateStr));
 }
 
 function windLabel(ms) {
@@ -432,12 +429,6 @@ function symbolLabel(code) {
   return code;
 }
 
-function windChill(temp, wind_ms) {
-  if (temp >= 10 || wind_ms < 4.8) return null;
-  const kmh = wind_ms * 3.6;
-  return 13.12 + 0.6215 * temp - 11.37 * Math.pow(kmh, 0.16) + 0.3965 * temp * Math.pow(kmh, 0.16);
-}
-
 function tempClass(t) {
   if (t <= -15) return 'vcold';
   if (t <= -5)  return 'cold';
@@ -445,40 +436,36 @@ function tempClass(t) {
   return '';
 }
 
-function formatHour(utcHour, date) {
-  // Convert UTC to local time (CET=+1, CEST=+2 after Mar 29 02:00)
-  const d = new Date(date + 'T' + String(utcHour).padStart(2,'0') + ':00:00Z');
-  return d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Oslo' });
-}
-
-function buildLocCard(locName, locAlt, dateStr, slots) {
+function buildLocCard(locName, locAlt, dateStr, intervals) {
   let rows = '';
-  let maxWind = 0, maxPrecip = 0, minTemp = 99;
+  let maxWind = 0, maxGust = 0, maxPrecip = 0, minTemp = 99, minFeels = 99;
 
-  for (const { hour, slot } of slots) {
-    const d = slot.data.instant.details;
-    const next6 = slot.data.next_6_hours;
-    const next1 = slot.data.next_1_hours;
-    const symbol = next6?.summary?.symbol_code || next1?.summary?.symbol_code || '';
-    const precip = next6?.details?.precipitation_amount ?? next1?.details?.precipitation_amount ?? 0;
-    const t = d.air_temperature;
-    const ws = d.wind_speed;
-    const wc = windChill(t, ws);
-    const wl = windLabel(ws);
-    const precipMax = 15; // bar scale max mm
-    const barW = Math.min(100, (precip / precipMax) * 100);
+  // Show every 2nd hour (06, 08, 10, 12, 14, 16, 18) to avoid clutter
+  const filtered = intervals.filter((_, i) => i % 2 === 0).slice(0, 9);
+
+  for (const iv of filtered) {
+    const t   = iv.temperature?.value ?? 0;
+    const ws  = iv.wind?.speed ?? 0;
+    const gust= iv.wind?.gust ?? null;
+    const feels = iv.feelsLike?.value ?? null;
+    const precip = iv.precipitation?.value ?? 0;
+    const symbol = iv.symbolCode?.next1Hour || '';
 
     if (ws > maxWind) maxWind = ws;
+    if (gust && gust > maxGust) maxGust = gust;
     if (precip > maxPrecip) maxPrecip = precip;
     if (t < minTemp) minTemp = t;
+    if (feels !== null && feels < minFeels) minFeels = feels;
 
+    const wl = windLabel(ws);
     const warnClass = wl.warn ? (ws >= 13.9 ? 'wind-strong' : 'wind-warn') : '';
     const tcls = tempClass(t);
-    const feelsHtml = wc !== null
-      ? `<div class="wx-feels">Føles <span class="${wc <= -20 ? 'feels-vcold' : 'feels-cold'}">${wc.toFixed(0)}°</span></div>`
-      : `<div class="wx-feels"></div>`;
+    const precipMax = 10;
+    const barW = Math.min(100, (precip / precipMax) * 100);
 
-    const gust = d.wind_speed_of_gust ?? null;
+    // Time: extract HH:MM from local ISO string
+    const timeStr = iv.start.substring(11, 16);
+
     const gustHtml = gust !== null
       ? (() => {
           const gl = windLabel(gust);
@@ -487,12 +474,16 @@ function buildLocCard(locName, locAlt, dateStr, slots) {
         })()
       : `<div class="wx-gust"><span class="wind-lbl">–</span></div>`;
 
+    const feelsHtml = feels !== null
+      ? `<div class="wx-feels">Føles <span class="${feels <= -20 ? 'feels-vcold' : feels <= -10 ? 'feels-cold' : ''}">${feels}°</span></div>`
+      : `<div class="wx-feels"></div>`;
+
     rows += `
       <div class="wx-row">
-        <div class="wx-time">${formatHour(hour, dateStr)}</div>
+        <div class="wx-time">${timeStr}</div>
         <div class="wx-sym">${symbolToEmoji(symbol)}</div>
         <div class="wx-desc">${symbolLabel(symbol)}</div>
-        <div class="wx-temp ${tcls}">${t >= 0 ? '+' : ''}${t.toFixed(0)}°C</div>
+        <div class="wx-temp ${tcls}">${t >= 0 ? '+' : ''}${t}°C</div>
         <div class="wx-wind">
           <span class="wind-val ${warnClass}">${ws.toFixed(1)} m/s</span>
           <span class="wind-lbl ${warnClass}">${wl.lbl}</span>
@@ -506,7 +497,7 @@ function buildLocCard(locName, locAlt, dateStr, slots) {
       </div>`;
   }
 
-  if (slots.length === 0) {
+  if (filtered.length === 0) {
     rows = `<div style="padding:0.8rem;color:#aaa;font-style:italic;">Ingen data tilgjengelig ennå for denne datoen.</div>`;
   }
 
@@ -522,24 +513,23 @@ function buildLocCard(locName, locAlt, dateStr, slots) {
         </div>
         ${rows}
       </div>
-    </div>`, maxWind, maxPrecip, minTemp };
+    </div>`, maxWind: maxGust || maxWind, maxPrecip, minTemp: minFeels < 99 ? minFeels : minTemp };
 }
 
 function buildAlerts(maxWind, maxPrecip, minTemp) {
   const parts = [];
-  if (maxWind >= 13.9) parts.push(`⚠️ Stiv kuling (${maxWind.toFixed(1)} m/s) — krevende forhold, vurder ruta nøye.`);
+  if (maxWind >= 17.2) parts.push(`🚨 Sterk kuling (kast ${maxWind.toFixed(1)} m/s) — vurder å utsette turen.`);
+  else if (maxWind >= 13.9) parts.push(`⚠️ Stiv kuling (kast ${maxWind.toFixed(1)} m/s) — krevende forhold, vurder ruta nøye.`);
   else if (maxWind >= 10.8) parts.push(`⚠️ Liten kuling (${maxWind.toFixed(1)} m/s) — vær obs på utsatte parti.`);
   if (maxPrecip >= 3) parts.push(`🌨️ Kraftig snøfall — dårlig sikt mulig. Sjekk <a href="https://www.varsom.no" target="_blank">varsom.no</a>.`);
   else if (maxPrecip >= 1) parts.push(`🌨️ Noe snøfall — sjekk skredvarsling på <a href="https://www.varsom.no" target="_blank">varsom.no</a>.`);
-  if (minTemp <= -20) parts.push(`🧊 Ekstremt kaldt (${minTemp.toFixed(0)}°C med vind) — ekstra isolasjon og balaklava.`);
+  if (minTemp <= -25) parts.push(`🧊 Ekstremt kaldt (føles som ${minTemp}°C) — balaklava og ekstra isolasjon.`);
 
   if (parts.length === 0) {
-    return `<div class="alert-strip good">✅ Forholdene ser greie ut. Oppdater siden igjen nærmere turen for fersk melding.</div>`;
+    return `<div class="alert-strip good">✅ Forholdene ser greie ut. Oppdater siden nærmere turen for fersk melding.</div>`;
   }
   return parts.map(p => `<div class="alert-strip warn">${p}</div>`).join('');
 }
-
-const HOURS = [0, 6, 9, 12, 15, 18];
 
 async function loadDay(wxId, alertId, date, locations) {
   try {
@@ -550,9 +540,8 @@ async function loadDay(wxId, alertId, date, locations) {
     let maxWind = 0, maxPrecip = 0, minTemp = 99;
 
     for (const loc of locations) {
-      const ts = cache[loc.key];
-      const slots = getSlots(ts, date, HOURS);
-      const card = buildLocCard(loc.name, loc.alt, date, slots);
+      const intervals = getSlotsYr(cache[loc.key], date);
+      const card = buildLocCard(loc.name, loc.alt, date, intervals);
       html += card.html;
       if (card.maxWind > maxWind) maxWind = card.maxWind;
       if (card.maxPrecip > maxPrecip) maxPrecip = card.maxPrecip;
@@ -592,7 +581,7 @@ async function main() {
 
   const now = new Date();
   const fmt = now.toLocaleString('no-NO', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
-  document.getElementById('updated-bar').innerHTML = `Vær hentet fra yr.no/met.no · <span>Oppdatert ${fmt}</span>`;
+  document.getElementById('updated-bar').innerHTML = `Vær hentet direkte fra yr.no · <span>Oppdatert ${fmt}</span>`;
 }
 
 main();
