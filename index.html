@@ -124,7 +124,7 @@
     /* WEATHER ROWS */
     .wx-header-row {
       display: grid;
-      grid-template-columns: 52px 32px 1fr 58px 1fr 80px 80px;
+      grid-template-columns: 52px 32px 1fr 58px 1fr 1fr 80px 80px;
       padding: 0.3rem 0.75rem;
       font-size: 0.7rem;
       color: var(--muted);
@@ -136,7 +136,7 @@
     }
     .wx-row {
       display: grid;
-      grid-template-columns: 52px 32px 1fr 58px 1fr 80px 80px;
+      grid-template-columns: 52px 32px 1fr 58px 1fr 1fr 80px 80px;
       padding: 0.55rem 0.75rem;
       border-bottom: 1px solid #eef0f3;
       align-items: center;
@@ -162,6 +162,7 @@
     .precip-bar { height: 8px; border-radius: 4px; background: var(--rain); min-width: 2px; }
     .precip-val { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
 
+    .wx-gust { }
     .wx-feels { font-size: 0.78rem; color: var(--muted); }
     .feels-cold  { color: #1060c0; font-weight: 600; }
     .feels-vcold { color: #0030a0; font-weight: 700; }
@@ -174,8 +175,8 @@
     @media (max-width: 600px) {
       .wx-header-row,
       .wx-row {
-        grid-template-columns: 48px 28px 90px 52px 110px 70px 80px;
-        min-width: 480px;
+        grid-template-columns: 48px 28px 90px 52px 100px 100px 70px 75px;
+        min-width: 560px;
         font-size: 0.8rem;
       }
       .wind-lbl { font-size: 0.68rem; }
@@ -477,6 +478,15 @@ function buildLocCard(locName, locAlt, dateStr, slots) {
       ? `<div class="wx-feels">Føles <span class="${wc <= -20 ? 'feels-vcold' : 'feels-cold'}">${wc.toFixed(0)}°</span></div>`
       : `<div class="wx-feels"></div>`;
 
+    const gust = d.wind_speed_of_gust ?? null;
+    const gustHtml = gust !== null
+      ? (() => {
+          const gl = windLabel(gust);
+          const gc = gl.warn ? (gust >= 13.9 ? 'wind-strong' : 'wind-warn') : '';
+          return `<div class="wx-gust"><span class="${gc}">${gust.toFixed(1)} m/s</span><span class="wind-lbl ${gc}">${gl.lbl}</span></div>`;
+        })()
+      : `<div class="wx-gust"><span class="wind-lbl">–</span></div>`;
+
     rows += `
       <div class="wx-row">
         <div class="wx-time">${formatHour(hour, dateStr)}</div>
@@ -487,6 +497,7 @@ function buildLocCard(locName, locAlt, dateStr, slots) {
           <span class="wind-val ${warnClass}">${ws.toFixed(1)} m/s</span>
           <span class="wind-lbl ${warnClass}">${wl.lbl}</span>
         </div>
+        ${gustHtml}
         <div class="wx-precip precip-bar-wrap">
           <div class="precip-bar" style="width:${barW}%"></div>
           <span class="precip-val">${precip > 0 ? precip.toFixed(1) + ' mm' : '–'}</span>
@@ -507,7 +518,7 @@ function buildLocCard(locName, locAlt, dateStr, slots) {
       </div>
       <div class="wx-scroll-wrap">
         <div class="wx-header-row">
-          <div>Tid</div><div></div><div>Vær</div><div>Temp</div><div>Vind</div><div>Nedbør</div><div>Føles som</div>
+          <div>Tid</div><div></div><div>Vær</div><div>Temp</div><div>Vind</div><div>Vindkast</div><div>Nedbør</div><div>Føles som</div>
         </div>
         ${rows}
       </div>
