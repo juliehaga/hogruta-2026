@@ -388,8 +388,8 @@ function getSlotsYr(timeseries, dateStr) {
       const next6 = ts.data.next_6_hours;
       const symbol = next1?.summary?.symbol_code || next6?.summary?.symbol_code || '';
       const precip = next1?.details?.precipitation_amount ?? next6?.details?.precipitation_amount ?? 0;
-      // Convert UTC time to local
-      const localTime = new Date(ts.time).toLocaleString('sv-SE', { timeZone: 'Europe/Oslo', hour: '2-digit', minute: '2-digit' }).substring(11, 16);
+      // Convert UTC time to local HH:MM
+      const localTime = new Date(ts.time).toLocaleTimeString('no-NO', { timeZone: 'Europe/Oslo', hour: '2-digit', minute: '2-digit' });
       return {
         start: ts.time.substring(0, 10) + 'T' + localTime + ':00',
         temperature: { value: d.air_temperature },
@@ -480,8 +480,9 @@ function buildLocCard(locName, locAlt, dateStr, intervals) {
     const precipMax = 10;
     const barW = Math.min(100, (precip / precipMax) * 100);
 
-    // Time: extract HH:MM from local ISO string
-    const timeStr = iv.start.substring(11, 16);
+    // Time: extract HH:MM — format is 'YYYY-MM-DTHH:MM:00'
+    const timePart = iv.start.split('T')[1] || '';
+    const timeStr = timePart.substring(0, 5);
 
     const gustHtml = gust !== null
       ? (() => {
