@@ -369,7 +369,7 @@ const cache = {};
 async function fetchForecast(key) {
   if (cache[key]) return cache[key];
   const { lat, lon, alt } = LOCS[key];
-  const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}&altitude=${alt}`;
+  const url = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${lat}&lon=${lon}&altitude=${alt}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
