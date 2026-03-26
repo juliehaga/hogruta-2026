@@ -457,8 +457,10 @@ function buildLocCard(locName, locAlt, dateStr, intervals) {
   let rows = '';
   let maxWind = 0, maxGust = 0, maxPrecip = 0, minTemp = 99, minFeels = 99;
 
-  // Show every 2nd hour (06, 08, 10, 12, 14, 16, 18) to avoid clutter
-  const filtered = intervals.filter((_, i) => i % 2 === 0).slice(0, 9);
+  // For hourly data: show every 2nd to avoid clutter. For sparse data (<=6 slots): show all.
+  const filtered = intervals.length > 8
+    ? intervals.filter((_, i) => i % 2 === 0).slice(0, 9)
+    : intervals;
 
   for (const iv of filtered) {
     const t   = iv.temperature?.value ?? 0;
